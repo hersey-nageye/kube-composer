@@ -1,0 +1,6 @@
+# Ignore local Terraform state
+*.tfstate
+*.tfstate.*
+.terraform/
+*.auto.tfvars
+.terraform.lock.hcl
