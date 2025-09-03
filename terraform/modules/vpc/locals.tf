@@ -1,5 +1,4 @@
 locals {
-  region = "eu-west-2"
   # Common cluster-discovery tag key
   eks_cluster_tag_key = "kubernetes.io/cluster/${var.cluster_name}"
 

@@ -77,6 +77,14 @@ resource "aws_route_table_association" "public-rta" {
   route_table_id = aws_route_table.public_rt.id
 }
 
+# Elastic IP for NAT Gateway
+resource "aws_eip" "nat" {
+  domain = "vpc"
+  tags = merge(var.common_tags, {
+    Name = "${var.project_name}-nat-eip"
+  })
+}
+
 # NAT Gateway placed in the first public subnet (index 0)
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
