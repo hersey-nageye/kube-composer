@@ -1,0 +1,26 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "ChangeRecordInSpecificZones",
+            "Effect": "Allow",
+            "Action": [
+                "route53:ChangeResourceRecordSets"
+            ],
+            "Resource": [
+                "arn:aws:route53:::hostedzone/Z02122373GSTUWDH3SLMY"
+            ]
+        },
+        {
+            "Sid": "ReadZones",
+            "Effect": "Allow",
+            "Action": [
+                "route53:ListHostedZones",
+                "route53:ListResourceRecordSets",
+                "route53:ListHostedZonesByName",
+                "route53:GetHostedZone"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

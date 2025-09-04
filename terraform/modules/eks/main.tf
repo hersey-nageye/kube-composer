@@ -160,6 +160,19 @@ resource "aws_eks_cluster" "control_plane" {
   ]
 }
 
+# OIDC provider for EKS cluster
+
+data "aws_eks_cluster" "cluster_info" {
+  name = aws_eks_cluster.control_plane.name
+}
+
+resource "aws_iam_openid_connect_provider" "this" {
+  url             = data.aws_eks_cluster.this.identity[0].oidc[0].issuer
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = [data.aws_eks_cluster.this.identity[0].oidc[0].thumbprint]
+  tags            = merge(var.common_tags, { Name = "${var.project_name}-eks-oidc-provider" })
+}
+
 ########################################
 # MANAGED NODE GROUP
 # - Runs EC2 worker nodes in PRIVATE subnets
