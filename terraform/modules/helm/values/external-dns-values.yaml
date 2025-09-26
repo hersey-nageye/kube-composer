@@ -1,0 +1,14 @@
+provider: aws
+
+env:
+- name: AWS_DEFAULT_REGION
+  value: eu-west-2
+
+serviceAccount:
+  create: true
+  name: external-dns
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::816069169238:role/irsa-kube-system-external-dns
+
+domainFilters:
+- eks.drhersey.org

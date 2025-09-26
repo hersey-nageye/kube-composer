@@ -8,7 +8,7 @@
                 "route53:ChangeResourceRecordSets"
             ],
             "Resource": [
-                "arn:aws:route53:::hostedzone/Z02122373GSTUWDH3SLMY"
+                "arn:aws:route53:::hostedzone/Z00163351E939CKYWTCEA"
             ]
         },
         {

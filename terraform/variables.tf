@@ -95,3 +95,50 @@ variable "capacity_type" {
 
 }
 
+variable "cert_manager_namespace" {
+  description = "Kubernetes namespace for the cert-manager ServiceAccount"
+  type        = string
+
+}
+
+variable "cert_manager_service_account" {
+  description = "Name of the cert-manager Kubernetes ServiceAccount"
+  type        = string
+
+}
+
+# variable "cert_manager_policy_json" {
+#   description = "IAM policy JSON granting permissions to the cert-manager service account"
+#   type        = string
+
+# }
+
+variable "dns_namespace" {
+  description = "Kubernetes namespace for the external-dns ServiceAccount"
+  type        = string
+
+}
+
+variable "dns_service_account" {
+  description = "Name of the external-dns Kubernetes ServiceAccount"
+  type        = string
+
+}
+
+variable "argocd_server_secretkey" {
+  type      = string
+  sensitive = true
+}
+
+
+# variable "dns_policy_json" {
+#   description = "IAM policy JSON granting permissions to the external-dns service account"
+#   type        = string
+
+# }
+
+# variable "cert_manager_name" {
+#   description = "Name of the Helm release for cert-manager"
+#   type        = string
+
+# }

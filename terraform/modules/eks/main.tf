@@ -167,9 +167,9 @@ data "aws_eks_cluster" "cluster_info" {
 }
 
 resource "aws_iam_openid_connect_provider" "this" {
-  url             = data.aws_eks_cluster.this.identity[0].oidc[0].issuer
+  url             = data.aws_eks_cluster.cluster_info.identity[0].oidc[0].issuer
   client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = [data.aws_eks_cluster.this.identity[0].oidc[0].thumbprint]
+  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da0afd10df6"] # EKS OIDC thumbprint (always this value) - Can make dynamic after MVP using tls_certificate data source
   tags            = merge(var.common_tags, { Name = "${var.project_name}-eks-oidc-provider" })
 }
 

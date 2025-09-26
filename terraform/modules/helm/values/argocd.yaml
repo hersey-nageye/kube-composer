@@ -1,0 +1,66 @@
+# argocd.yaml
+configs:
+  secret:
+    create: true
+    extra:
+      server.secretkey: {}
+
+
+server:
+  certificate:
+    enabled: false
+  extraArgs:
+    - --insecure
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/hsts: "false"
+      cert-manager.io/cluster-issuer: issuer
+    hostname: argocd.eks.drhersey.org
+    extraTls:
+      - secretName: argocd-ingress-tls
+        hosts:
+          - argocd.eks.drhersey.org
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# server:
+#   certificate:
+#     enabled: false
+#   extraArgs:
+#   - --insecure
+#   service:
+#     type: ClusterIP
+#   ingress:
+#     enabled: true
+#     ingressClassName: nginx
+#     annotations:
+#       nginx.org/hsts: "false"
+#       cert-manager.io/cluster-issuer: issuer
+#     hosts:
+#     - argocd.eks.drhersey.org
+#     tls: 
+#     - secretName: argocd-ingress-tls
+#       hosts:
+#       - argocd.eks.drhersey.org

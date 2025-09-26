@@ -1,0 +1,21 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: issuer
+spec:
+  acme:
+    server: "https://acme-v02.api.letsencrypt.org/directory"
+    email: "hersey_nageye1@hotmai.com"
+    privateKeySecretRef:
+      name: issuer
+    solvers:
+    - dns01:
+        route53:
+          hostedZoneID: Z00163351E939CKYWTCEA
+          region: eu-west-2
+      selector:
+        dnsZones:
+        - "eks.drhersey.org"
+    - http01:
+        ingress:
+          class: nginx

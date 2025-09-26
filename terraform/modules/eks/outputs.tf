@@ -34,6 +34,12 @@ output "oidc_provider_url" {
 
 }
 
+output "cluster_certificate_authority" {
+  description = "The base64 encoded certificate data required to communicate with the cluster"
+  value       = aws_eks_cluster.control_plane.certificate_authority[0].data
+
+}
+
 
 
 
