@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kube-composer-app
+  namespace: myapp
+  annotations:
+    # cert-manager issues the cert for this host
+    cert-manager.io/cluster-issuer: issuer
+    # your app speaks HTTP to the Service (change to "HTTPS" if needed)
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    # optional: force https
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - composer.eks.drhersey.org
+      secretName: kube-composer-app-tls   # cert-manager will create/renew this
+  rules:
+    - host: composer.eks.drhersey.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-composer-app
+                port:
+                  number: 80

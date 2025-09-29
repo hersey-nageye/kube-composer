@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-composer-app
+spec:
+  selector:
+    app: kube-composer-app
+  ports:
+  - port: 80
+    targetPort: 8080

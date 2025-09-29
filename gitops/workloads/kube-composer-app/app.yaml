@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-composer-app
+  namespace: argo-cd
+  annotations:
+    argocd.argoproj.io/sync-options: CreateNamespace=true
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hersey-nageye/kube-composer.git
+    targetRevision: main
+    path: gitops/workloads/kube-composer-app/base
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: myapp
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }

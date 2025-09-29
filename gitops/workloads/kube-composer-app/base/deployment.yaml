@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-composer-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kube-composer-app
+  template:
+    metadata:
+      labels:
+        app: kube-composer-app
+    spec:
+      containers:
+      - name: app
+        image: 816069169238.dkr.ecr.eu-west-2.amazonaws.com/ecs-project:latest
+        ports:
+        - containerPort: 8080
