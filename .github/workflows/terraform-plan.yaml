@@ -1,4 +1,4 @@
-name: Terraform Security Scan and Plan #Hersey Nageye
+name: Terraform Security Scan and Plan # Hersey Nageye
 
 permissions:
   contents: read
