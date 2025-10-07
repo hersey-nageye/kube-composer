@@ -1,4 +1,4 @@
-name: Terraform Security Scan and Plan # Terraform Security Scan and Plan
+name: Terraform Security Scan and Plan
 
 permissions:
   contents: read

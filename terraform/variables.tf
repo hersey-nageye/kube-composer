@@ -128,6 +128,7 @@ variable "dns_service_account" {
 variable "argocd_server_secretkey" {
   type      = string
   sensitive = true
+  default   = null
 }
 
 
