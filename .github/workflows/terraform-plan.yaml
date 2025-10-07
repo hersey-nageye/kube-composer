@@ -87,7 +87,15 @@ jobs:
     - name: Terraform Format Check
       run: terraform fmt -check -recursive
       continue-on-error: true
-      
+
+    - name: Debug AWS env
+      run: |
+        echo "Region vars:"
+        echo "AWS_REGION=${AWS_REGION}"
+        echo "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
+        echo "Endpoint vars (should be empty):"
+        env | grep -E '^AWS_.*ENDPOINT' || true
+
     - name: Terraform Init
       run: |
         terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
