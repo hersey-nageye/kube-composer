@@ -101,11 +101,10 @@ jobs:
 
     - name: Terraform Init
       run: |
-        terraform init -reconfigure \ 
-            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
-            -backend-config="key=${{ secrets.TF_STATE_KEY }}" \
-            -backend-config="region=${{ env.AWS_REGION }}" \
-            -backend-config="dynamodb_table=eks-project-locks"
+        terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+                       -backend-config="key=${{ secrets.TF_STATE_KEY }}" \
+                       -backend-config="region=${{ env.AWS_REGION }}" \
+                       -backend-config="dynamodb_table=eks-project-locks"
                        
                        
     - name: Terraform Validate
