@@ -11,12 +11,12 @@ on:
     branches: [ main ]
     paths:
       - 'terraform/**'
-      - '.github/workflows/terraform-plan.yml'
+      - '.github/workflows/terraform-plan.yaml'
   pull_request:
     branches: [ main ]
     paths:
       - 'terraform/**'
-      - '.github/workflows/terraform-plan.yml'
+      - '.github/workflows/terraform-plan.yaml'
 
 jobs:
   terraform-scan-and-plan:
