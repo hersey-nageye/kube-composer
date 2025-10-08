@@ -49,6 +49,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Clear stale S3 lockfile (if any)
+        run: |
+           aws s3api head-object \
+              --bucket "${{ secrets.TF_STATE_BUCKET }}" \
+              --key "${{ secrets.TF_STATE_KEY }}.tflock" \
+              --region "${{ env.AWS_REGION }}" >/dev/null 2>&1 && \
+           aws s3 rm "s3://${{ secrets.TF_STATE_BUCKET }}/${{ secrets.TF_STATE_KEY }}.tflock" \
+              --region "${{ env.AWS_REGION }}" || true
+
+
       # ---------- Security scans ----------
       - name: Setup Python for Checkov
         uses: actions/setup-python@v5
