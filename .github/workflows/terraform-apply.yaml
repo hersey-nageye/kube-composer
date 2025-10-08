@@ -50,6 +50,24 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
+    - name: Echo provided run id
+      run: echo "run_id=${{ inputs.plan_run_id }}"
+
+    - name: List artifacts on that run
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const run_id = parseInt('${{ inputs.plan_run_id }}', 10);
+          const res = await github.rest.actions.listWorkflowRunArtifacts({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            run_id
+          });
+          core.info('Artifacts found: ' + (res.data.artifacts.map(a => a.name).join(', ') || '(none)'));
+          const hit = res.data.artifacts.find(a => a.name === 'terraform-plan');
+          if (!hit) core.setFailed('No artifact named "terraform-plan" on that run. Double-check the run ID and that the Plan upload step ran.');
+
+
     - name: Download Terraform Plan
       uses: actions/download-artifact@v4
       with:
