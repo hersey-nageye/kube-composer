@@ -1,0 +1,100 @@
+name: Terraform Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      plan_run_id:
+        description: 'Run ID from the Terraform Plan pipeline to apply'
+        required: true
+        type: string
+      confirm_apply:
+        description: 'Type "APPLY" to confirm you want to apply the infrastructure changes'
+        required: true
+        type: string
+
+env:
+  AWS_REGION: eu-west-2
+  TF_VERSION: 1.11.2
+
+jobs:
+  terraform-apply:
+    name: Apply Terraform Plan
+    runs-on: ubuntu-latest
+    environment: production  # This adds a manual approval gate
+
+    steps:
+    - name: Validate confirmation
+      run: |
+        if [ "${{ inputs.confirm_apply }}" != "APPLY" ]; then
+          echo "Confirmation failed. You must type 'APPLY' exactly to proceed."
+          exit 1
+        fi
+        echo "Confirmation validated"
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Download Terraform Plan
+      uses: actions/download-artifact@v4
+      with:
+        name: terraform-plan
+        path: terraform/
+        run-id: ${{ inputs.plan_run_id }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Verify plan file exists
+      run: |
+        if [ ! -f "tfplan" ]; then
+          echo "Plan file not found! Make sure you're using the correct run ID."
+          exit 1
+        fi
+        echo "Plan file found"
+      working-directory: terraform
+
+    - name: Show plan summary
+      run: |
+        if [ -f "tfplan.txt" ]; then
+          echo "## Plan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          head -50 tfplan.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        fi
+      working-directory: terraform
+
+    - name: Terraform Init
+      run: |
+        terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+                       -backend-config="key=${{ secrets.TF_STATE_KEY }}" \
+                       -backend-config="region=${{ env.AWS_REGION }}"
+      working-directory: terraform
+
+    - name: Apply Terraform Plan
+      run: |
+        echo "Applying terraform plan..."
+        terraform apply -auto-approve tfplan
+        echo "Terraform apply completed successfully!"
+      working-directory: terraform
+
+    - name: Apply Summary
+      if: always()
+      run: |
+        echo "## Apply Results" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ job.status }}" = "success" ]; then
+          echo "**Infrastructure successfully applied!**" >> $GITHUB_STEP_SUMMARY
+          echo "- Applied plan from run ID: ${{ inputs.plan_run_id }}" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "**Apply failed!**" >> $GITHUB_STEP_SUMMARY
+          echo "- Check the logs above for error details" >> $GITHUB_STEP_SUMMARY
+        fi
