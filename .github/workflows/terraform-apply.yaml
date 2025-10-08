@@ -12,6 +12,10 @@ on:
         required: true
         type: string
 
+permissions:
+  actions: read
+  contents: read        
+
 env:
   AWS_REGION: eu-west-2
   TF_VERSION: 1.11.2
@@ -50,18 +54,13 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: terraform-plan
-        path: terraform/
+        path: terraform
         run-id: ${{ inputs.plan_run_id }}
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ github.token }}
 
     - name: Verify plan file exists
-      run: |
-        if [ ! -f "tfplan" ]; then
-          echo "Plan file not found! Make sure you're using the correct run ID."
-          exit 1
-        fi
-        echo "Plan file found"
       working-directory: terraform
+      run: test -f ./tfplan
 
     - name: Show plan summary
       run: |
