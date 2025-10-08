@@ -72,7 +72,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: terraform-plan
-        path: terraform
+        path: terraform/
         run-id: ${{ inputs.plan_run_id }}
         github-token: ${{ github.token }}
 

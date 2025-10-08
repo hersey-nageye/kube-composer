@@ -135,8 +135,8 @@ jobs:
         with:
           name: terraform-plan
           path: |
-            tfplan
-            tfplan.txt
+            terraform/tfplan
+            terraform/tfplan.txt
 
       - name: Comment PR with Terraform Plan
         if: github.event_name == 'pull_request'
