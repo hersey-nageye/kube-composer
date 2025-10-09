@@ -1,0 +1,58 @@
+name: Bump GitOps Tag
+
+on:
+  workflow_run:
+    workflows: ["Docker Build, Scan and Push to ECR"] 
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    # only proceed if the upstream workflow succeeded AND it ran on main
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Compute new tag from the build SHA
+        id: meta
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: echo "NEW_TAG=sha-${HEAD_SHA:0:12}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fast-forward to latest main (avoid push races)
+        run: git pull --ff-only
+
+      - name: Update deployment.yaml image tag
+        env:
+          NEW_TAG: ${{ steps.meta.outputs.NEW_TAG }}
+        run: |
+          FILE="gitops/workloads/kube-composer-app/base/deployment.yaml"
+          REPO="816069169238.dkr.ecr.eu-west-2.amazonaws.com/ecs-project"
+
+          # Replace only the tag (keep repo unchanged)
+          sed -i "s#^\([[:space:]]*image:[[:space:]]*$REPO:\).*#\1${NEW_TAG}#" "$FILE"
+
+          echo "Updated image line:"
+          grep -E "^[[:space:]]*image:[[:space:]]*$REPO:" "$FILE" || true
+
+          # Commit only if something changed
+          if git diff --quiet -- "$FILE"; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add "$FILE"
+          git commit -m "deploy kube-composer-app ${NEW_TAG}"
+          git push
