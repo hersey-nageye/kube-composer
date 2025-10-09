@@ -125,7 +125,7 @@ module "helm_argo_cd" {
     kubernetes = kubernetes
   }
 
-  depends_on = [module.eks]
+  depends_on = [module.helm.ingress_nginx]
 
 }
 

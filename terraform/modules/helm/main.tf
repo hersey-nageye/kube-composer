@@ -25,6 +25,7 @@ resource "helm_release" "this" {
   reuse_values     = false
   reset_values     = true
   force_update     = true
+  wait             = true
   atomic           = true
   cleanup_on_fail  = true
   timeout          = 600
