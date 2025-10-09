@@ -3,10 +3,14 @@ name: Docker Build, Scan and Push to ECR
 on:
   push:
     branches: [ main ]
-    paths: [ 'app/**', '.github/workflows/docker-*.yaml' ]
+    paths: 
+      - 'app/**'
+      - '.github/workflows/docker-*.yaml'
   pull_request:
     branches: [ main ]
-    paths: [ 'app/**', '.github/workflows/docker-*.yaml' ]
+    paths:  
+      - 'app/**'
+      - '.github/workflows/docker-*.yaml' 
 
 env:
   AWS_REGION: eu-west-2
