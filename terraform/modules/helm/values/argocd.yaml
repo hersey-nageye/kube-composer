@@ -1,11 +1,4 @@
 # argocd.yaml
-configs:
-  secret:
-    create: true
-    extra:
-      server.secretkey: {}
-
-
 server:
   certificate:
     enabled: false
