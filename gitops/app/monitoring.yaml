@@ -11,7 +11,7 @@ spec:
     repoURL: https://github.com/hersey-nageye/kube-composer.git
     targetRevision: main
     # this is a folder in *your* repo that we’ll create
-    path: gitops/workloads/monitoring/kube-prometheus-stack
+    path: gitops/workloads/kube-prometheus-stack
     helm:
       releaseName: kube-prometheus-stack
   destination:
