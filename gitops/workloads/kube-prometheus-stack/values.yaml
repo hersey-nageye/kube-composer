@@ -1,0 +1,13 @@
+grafana:
+  adminUser: admin
+  adminPassword: admin
+  service:
+    type: ClusterIP
+  defaultDashboardsEnabled: true
+
+prometheus:
+  service:
+    type: ClusterIP
+
+prometheusOperator:
+  enabled: true

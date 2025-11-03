@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argo-cd        # you used `argo-cd` in your existing app
+  annotations:
+    argocd.argoproj.io/sync-options: CreateNamespace=true
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hersey-nageye/kube-composer.git
+    targetRevision: main
+    # this is a folder in *your* repo that we’ll create
+    path: gitops/workloads/monitoring/kube-prometheus-stack
+    helm:
+      releaseName: kube-prometheus-stack
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,7 @@
+apiVersion: v2
+name: kube-prometheus-stack-wrapper
+version: 0.1.0
+dependencies:
+  - name: kube-prometheus-stack
+    version: 65.0.0        # pick a current version
+    repository: https://prometheus-community.github.io/helm-charts
