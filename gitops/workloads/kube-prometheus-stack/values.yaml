@@ -5,6 +5,20 @@ grafana:
     type: ClusterIP
   defaultDashboardsEnabled: true
 
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: issuer
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - grafana.eks.drhersey.org
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - grafana.eks.drhersey.org
+
 prometheus:
   service:
     type: ClusterIP
