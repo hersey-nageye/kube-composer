@@ -2,18 +2,46 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: monitoring
-  namespace: argo-cd        # you used `argo-cd` in your existing app
+  namespace: argo-cd
   annotations:
     argocd.argoproj.io/sync-options: CreateNamespace=true
 spec:
   project: default
   source:
-    repoURL: https://github.com/hersey-nageye/kube-composer.git
-    targetRevision: main
-    # this is a folder in *your* repo that we’ll create
-    path: gitops/workloads/kube-prometheus-stack
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 62.0.0       # you can pick a specific version
     helm:
       releaseName: kube-prometheus-stack
+      values: |
+        grafana:
+          enabled: true
+          adminUser: admin
+          adminPassword: admin
+          service:
+            type: ClusterIP
+          defaultDashboardsEnabled: true
+
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            annotations:
+              cert-manager.io/cluster-issuer: issuer
+              nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+              nginx.ingress.kubernetes.io/ssl-redirect: "true"
+            hosts:
+              - grafana.eks.drhersey.org
+            tls:
+              - secretName: grafana-tls
+                hosts:
+                  - grafana.eks.drhersey.org
+
+        prometheus:
+          service:
+            type: ClusterIP
+
+        prometheusOperator:
+          enabled: true
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
