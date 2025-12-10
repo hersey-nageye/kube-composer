@@ -59,7 +59,7 @@ jobs:
               --region "${{ env.AWS_REGION }}" || true
 
 
-      # ---------- Security scans ----------
+      # Security scans
       - name: Setup Python for Checkov
         uses: actions/setup-python@v5
         with:
@@ -97,20 +97,7 @@ jobs:
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
 
-      # ---------- Backend & plan ----------
-    #   - name: Debug AWS env
-    #     run: |
-    #       echo "Region vars:"
-    #       echo "AWS_REGION=${AWS_REGION}"
-    #       echo "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
-    #       echo "Endpoint vars (should be empty):"
-    #       env | grep -E '^AWS_.*ENDPOINT' || true
-
-    #   - name: Clear custom AWS endpoint envs (avoid blank endpoint errors)
-    #     run: |
-    #       unset AWS_ENDPOINT_URL || true
-    #       unset AWS_ENDPOINT_URL_DYNAMODB || true
-    #       unset AWS_DYNAMODB_ENDPOINT || true
+      # Terraform init, validate, plan
 
       - name: Terraform Init
         run: |
@@ -128,7 +115,7 @@ jobs:
           terraform plan -input=false -lock-timeout=5m -no-color -out=tfplan
           terraform show -no-color tfplan > tfplan.txt
 
-      # ---------- Surface results ----------
+      # Surface results
       - name: Upload Terraform Plan
         uses: actions/upload-artifact@v4
         with:
