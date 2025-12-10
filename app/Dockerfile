@@ -1,4 +1,4 @@
-# Build Stage - Hello World!
+# Build Stage
 FROM node:23-alpine AS builder
 WORKDIR /app
 
@@ -10,7 +10,7 @@ RUN yarn install --frozen-lockfile
 COPY . .
 RUN yarn build
 
-# ---- Production Stage ----
+# Production Stage
 FROM nginx:alpine
 
 # Remove default nginx static assets
