@@ -51,6 +51,7 @@ kube-composer
 │       │       └── service.yaml
 │       └── kube-prometheus-stack
 │           └── Chart.yaml
+├── images
 ├── terraform
 │   ├── .gitignore
 │   ├── backend.tf
