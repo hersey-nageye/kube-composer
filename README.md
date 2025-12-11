@@ -72,9 +72,9 @@ kube-composer
 
 ### Kubernetes & Argo CD
 
-* **Amazon EKS** - Fully managed Kubernetes control plane.
-* **Managed Nodes Groups** - Host application pods and cluster services.
-* **Argo CD (GitOps)** - Watches the GitOps repo and continuously syncs:
+* **Amazon EKS** - Fully managed Kubernetes control plane
+* **Managed Nodes Groups** - Host application pods and cluster services
+* **Argo CD (GitOps)** - Watches the GitHub repo and continuously syncs:
     * Application workloads
     * Monitoring stack
     * ExternalDNS & CertManager
@@ -88,7 +88,7 @@ kube-composer
 
 ### DNS (ExternalDNS)
 
-* **ExternalDNS** automatically creates and updates DNS records in Route53 based on the ingress resources deployyed in the cluster
+* **ExternalDNS** automatically creates and updates DNS records in Route53 based on the ingress resources deployed in the cluster
 * When an application is exposed through an Ingress, ExternalDNS will:
     * Create te correct DNS record (e.g., `composer.eks.drhersey.org`, `grafana.eks.drhersey.org` )
     * Keep records up to date if IPs or load balancers change
@@ -113,7 +113,7 @@ kube-composer
     * CPU and memeory usage
     * Deployment and cluster state
     * Ingress latency and traffic metrics
-* Grafana visualises these metrics with prebuilt and custom dashboards.
+* Grafana visualises these metrics with prebuilt dashboards.
 
 ## CI/CD & Automation (GitHub Actions + Argo CD)
 
