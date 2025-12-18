@@ -14,6 +14,11 @@ It includes:
 * Dynamic DNS updates using ExternalDNS (Route53)
 * Monitoring and dashboards using Prometheus and Grafana
 
+## Architectural Diagram
+
+![Kube Composer Diagram](images/kube-composer-diagram.png)
+
+
 ## Local App Setup
 
 To run the app locally:
