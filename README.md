@@ -96,14 +96,14 @@ kube-composer
 
 * **ExternalDNS** automatically creates and updates DNS records in Route53 based on the ingress resources deployed in the cluster
 * When an application is exposed through an Ingress, ExternalDNS will:
-    * Create te correct DNS record (e.g., `composer.eks.drhersey.org`, `grafana.eks.drhersey.org` )
+    * Create the correct DNS record (e.g., `composer.eks.drhersey.org`, `grafana.eks.drhersey.org` )
     * Keep records up to date if IPs or load balancers change
-* ExternalDNS uses IRSA (IAM Roles for Services accounts) to securly update Route53 without storing credentials.
+* ExternalDNS uses IRSA (IAM Roles for Services accounts) to securly update Route53 without storing credentials
 
 ### Certificate Management (CertManager) 
 
 * **CertManager** provisions and renews TLS certificates automatically
-* Works with a Certificate Authroity (i.e. Let's Encrypt) using DNS-01 challanges through Route53
+* Works with a Certificate Authority (i.e. Let's Encrypt) using DNS-01 challanges through Route53
 * Any Ingress requesting TLS (e.g., `composer.eks.drhersey.org`, `grafana.eks.drhersey.org` ) will automatically receive:
     * A valid HTTPS certificate
     * A Kubernetes TLS secret containing the cert and key
