@@ -116,7 +116,7 @@ kube-composer
     * **Grafana** for dashboards
 * Prometheus automatically collects:
     * Node and pod health data
-    * CPU and memeory usage
+    * CPU and memory usage
     * Deployment and cluster state
     * Ingress latency and traffic metrics
 * Grafana visualises these metrics with prebuilt dashboards.
