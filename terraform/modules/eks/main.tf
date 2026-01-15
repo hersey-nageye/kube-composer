@@ -1,14 +1,12 @@
+# Data source to get current AWS partition (for constructing ARNs)
+# Purpose: To avoid hardcoding "aws" in ARNs as well as making the module
+# more reusable across different partitions (e.g., aws, aws-cn, aws-us-gov)
 data "aws_partition" "current" {}
 
 
-########################################
-# IAM ROLES AND ATTACHMENTS
-# - EKS control-plane role
-# - EKS node-group role
-# - Required AWS-managed policy attachments
-########################################
-
 # Control-plane IAM role
+# Purpose: Role assumed by EKS to manage the control-plane. Role gives EKS permissions
+# to manage AWS resources without needing your AWS account credentials.
 resource "aws_iam_role" "eks_cluster" {
   name = "${var.cluster_name}-cluster-role"
   assume_role_policy = jsonencode({
@@ -27,17 +25,15 @@ resource "aws_iam_role" "eks_cluster" {
   )
 }
 
+# Attach required policies to the EKS control-plane role
+# Purpose: Grants the EKS control-plane role the necessary permissions to manage AWS resources.
 resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSClusterPolicy" {
   role       = aws_iam_role.eks_cluster.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
-# resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSVPCResourceController" {
-#   role       = aws_iam_role.eks_cluster.name
-#   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSVPCResourceController"
-# }
-
 # Node-group IAM role
+# Purpose: Role assumed by EKS worker nodes to interact with AWS resources.
 resource "aws_iam_role" "eks_nodes" {
   name = "${var.cluster_name}-node-role"
   assume_role_policy = jsonencode({
@@ -56,28 +52,30 @@ resource "aws_iam_role" "eks_nodes" {
   )
 }
 
+# Attach AmazonEKSWorkerNodePolicy to the eks_nodes IAM role
+# Purpose: Grants EC2 instances (worker nodes) the necessary permissions to authenticate
+# to the EKS control-plane and perform AWS API calls.
 resource "aws_iam_role_policy_attachment" "nodes_AmazonEKSWorkerNodePolicy" {
   role       = aws_iam_role.eks_nodes.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSWorkerNodePolicy"
 }
 
+# Attach AmazonEKS_CNI_Policy to the eks_nodes IAM role
+# Purpose: Grants worker nodes permissions to manage networking resources
 resource "aws_iam_role_policy_attachment" "nodes_AmazonEKS_CNI_Policy" {
   role       = aws_iam_role.eks_nodes.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
+# Attach AmazonEC2ContainerRegistryReadOnly to the eks_nodes IAM role
+# Purpose: Grants worker nodes read-only access to Amazon ECR repositories
 resource "aws_iam_role_policy_attachment" "nodes_AmazonEC2ContainerRegistryReadOnly" {
   role       = aws_iam_role.eks_nodes.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
-########################################
-# SECURITY GROUPS
-# - Cluster SG (attached to control-plane ENIs)
-# - Nodes SG (attached to worker EC2 instances)
-# - Rules allow cluster <-> nodes comms and egress
-########################################
-
+# Control Plane Security Group
+# Purpose: To manage inbound and outbound traffic to/from the EKS control-plane
 resource "aws_security_group" "control_plane_sg" {
   name        = "${var.cluster_name}-control-plane-sg"
   description = "EKS control-plane SG"
@@ -87,6 +85,8 @@ resource "aws_security_group" "control_plane_sg" {
   })
 }
 
+# Worker Nodes Security Group
+# Purpose: To manage inbound and outbound traffic to/from the EKS worker nodes
 resource "aws_security_group" "nodes_sg" {
   name        = "${var.cluster_name}-nodes-sg"
   description = "EKS worker nodes SG"
@@ -96,7 +96,7 @@ resource "aws_security_group" "nodes_sg" {
   })
 }
 
-# Allow nodes -> cluster and cluster -> nodes (all node/control-plane ports managed by EKS)
+# Inbound rule for control plane SG to allow inbound traffic from worker nodes SG
 resource "aws_vpc_security_group_ingress_rule" "control_plane_ingress_from_nodes" {
   security_group_id            = aws_security_group.control_plane_sg.id
   referenced_security_group_id = aws_security_group.nodes_sg.id
@@ -106,7 +106,7 @@ resource "aws_vpc_security_group_ingress_rule" "control_plane_ingress_from_nodes
   ip_protocol                  = "tcp"
 }
 
-
+# Outbound rule for control plane SG to allow all outbound traffic
 resource "aws_vpc_security_group_egress_rule" "control_plane_egress_all" {
   security_group_id = aws_security_group.control_plane_sg.id
   description       = "Allow all outbound traffic from control plane"
@@ -115,6 +115,7 @@ resource "aws_vpc_security_group_egress_rule" "control_plane_egress_all" {
 
 }
 
+# Inbound rule for worker nodes SG to allow inbound traffic from control plane SG
 resource "aws_vpc_security_group_ingress_rule" "nodes_ingress_from_control_plane" {
   security_group_id            = aws_security_group.nodes_sg.id
   referenced_security_group_id = aws_security_group.control_plane_sg.id
@@ -124,6 +125,7 @@ resource "aws_vpc_security_group_ingress_rule" "nodes_ingress_from_control_plane
   ip_protocol                  = "tcp"
 }
 
+# Outbound rule for worker nodes SG to allow all outbound traffic
 resource "aws_vpc_security_group_egress_rule" "nodes_egress_all" {
   security_group_id = aws_security_group.nodes_sg.id
   description       = "Allow all outbound traffic from worker nodes"
@@ -132,19 +134,16 @@ resource "aws_vpc_security_group_egress_rule" "nodes_egress_all" {
 
 }
 
-########################################
-# EKS CLUSTER (CONTROL PLANE)
-# - Places control-plane ENIs in PUBLIC subnets (like your tutor)
-# - Public endpoint enabled with CIDR allow-list
-########################################
-
+# EKS Cluster (Control Plane)
+# Purpose: Creates the EKS cluster. The VPC config block manages
+# communication with the custom VPC.
 resource "aws_eks_cluster" "control_plane" {
   name     = var.cluster_name
   version  = var.cluster_version
   role_arn = aws_iam_role.eks_cluster.arn
 
   vpc_config {
-    subnet_ids              = var.public_subnet_ids # public subnets
+    subnet_ids              = var.public_subnet_ids
     endpoint_public_access  = var.cluster_endpoint_public_access
     endpoint_private_access = var.endpoint_private_access
     public_access_cidrs     = var.cluster_endpoint_public_access_cidrs
@@ -161,11 +160,13 @@ resource "aws_eks_cluster" "control_plane" {
 }
 
 # OIDC provider for EKS cluster
-
+# Purpose: Read the OIDC issuer URL from the EKS cluster to create the IAM OIDC provider
 data "aws_eks_cluster" "cluster_info" {
   name = aws_eks_cluster.control_plane.name
 }
 
+# Create the OIDC provider
+# Purpose: Makes IRSA possible by registering OIDC provider with IAM
 resource "aws_iam_openid_connect_provider" "this" {
   url             = data.aws_eks_cluster.cluster_info.identity[0].oidc[0].issuer
   client_id_list  = ["sts.amazonaws.com"]
@@ -173,17 +174,14 @@ resource "aws_iam_openid_connect_provider" "this" {
   tags            = merge(var.common_tags, { Name = "${var.project_name}-eks-oidc-provider" })
 }
 
-########################################
-# MANAGED NODE GROUP
-# - Runs EC2 worker nodes in PRIVATE subnets
-# - Autoscaling min/desired/max
-########################################
-
+# EKS Node Group (Worker Nodes)
+# Purpose: Creates a managed node group for the EKS cluster. The node group
+# provisions EC2 instances in private subnets to run workloads.
 resource "aws_eks_node_group" "worker_nodes" {
   cluster_name    = aws_eks_cluster.control_plane.name
   node_group_name = "${var.cluster_name}-ng"
   node_role_arn   = aws_iam_role.eks_nodes.arn
-  subnet_ids      = var.private_subnet_ids # private subnets
+  subnet_ids      = var.private_subnet_ids
   capacity_type   = var.capacity_type
 
   scaling_config {
@@ -207,12 +205,11 @@ resource "aws_eks_node_group" "worker_nodes" {
   ]
 }
 
-########################################
-# (RECOMMENDED) CORE ADDONS
-# - VPC CNI, CoreDNS, kube-proxy
-# - You can pin addon_version if you want determinism
-########################################
+# Core EKS Add-ons
+# Purpose: Deploys essential EKS add-ons explicitly to ensure they are present and configured correctly.
 
+# VPC-CNI (Pod Networking)
+# Purpose: Assigns VPC IP addresses to pods for network connectivity
 resource "aws_eks_addon" "vpc_cni" {
   cluster_name                = aws_eks_cluster.control_plane.name
   addon_name                  = "vpc-cni"
@@ -220,6 +217,8 @@ resource "aws_eks_addon" "vpc_cni" {
   depends_on                  = [aws_eks_node_group.worker_nodes]
 }
 
+# CoreDNS (Cluster DNS)
+# Purpose: Provides DNS resolution for services within the cluster
 resource "aws_eks_addon" "coredns" {
   cluster_name                = aws_eks_cluster.control_plane.name
   addon_name                  = "coredns"
@@ -227,6 +226,8 @@ resource "aws_eks_addon" "coredns" {
   depends_on                  = [aws_eks_node_group.worker_nodes]
 }
 
+# Kube-Proxy (Network Proxy)
+# Purpose: Manages network rules on nodes to allow communication to pods
 resource "aws_eks_addon" "kube_proxy" {
   cluster_name                = aws_eks_cluster.control_plane.name
   addon_name                  = "kube-proxy"

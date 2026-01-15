@@ -1,7 +1,6 @@
-# VPC - This module creates a custom Virtual Private Cloud (VPC) with public subnets, an internet gateway, and route tables.
-
-
 # VPC
+# Purpose: Primary network boundary for the cluster. CIDR is controlled by var.vpc_cidr
+# and must not overlap with other environments.
 resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr
   tags = merge(var.common_tags, {
@@ -11,6 +10,7 @@ resource "aws_vpc" "main" {
 
 
 # Public Subnets
+# Purpose: Public IPs enabled subnets for resources that required both inbound and outbound internet access.
 resource "aws_subnet" "public" {
   count                   = length(var.public_subnet_cidrs)
   vpc_id                  = aws_vpc.main.id
@@ -28,6 +28,7 @@ resource "aws_subnet" "public" {
 }
 
 # Private Subnets
+# Purpose: Private IPs only subnets for resources that do not need inbound internet access.
 resource "aws_subnet" "private" {
   count             = length(var.private_subnet_cidrs)
   vpc_id            = aws_vpc.main.id
@@ -44,6 +45,7 @@ resource "aws_subnet" "private" {
 }
 
 # Internet Gateway
+# Purpose: Provides internet access to public subnets.
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
   tags = merge(
@@ -55,6 +57,7 @@ resource "aws_internet_gateway" "igw" {
 }
 
 # Route Table for Public Subnets
+# Purpose: Routes internet-bound traffic from public subnets to the Internet Gateway.
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.main.id
 
@@ -71,6 +74,7 @@ resource "aws_route_table" "public_rt" {
 }
 
 # Route Table Association for Public Subnets
+# Purpose: Associates public subnets with the public route table.
 resource "aws_route_table_association" "public-rta" {
   count          = length(aws_subnet.public)
   subnet_id      = aws_subnet.public[count.index].id
@@ -78,6 +82,8 @@ resource "aws_route_table_association" "public-rta" {
 }
 
 # Elastic IP for NAT Gateway
+# Purpose: Provides a static public IP for the NAT Gateway. 
+# This prevents connection interruptions if infrastructure is recreated.
 resource "aws_eip" "nat" {
   domain = "vpc"
   tags = merge(var.common_tags, {
@@ -85,7 +91,9 @@ resource "aws_eip" "nat" {
   })
 }
 
-# NAT Gateway placed in the first public subnet (index 0)
+# NAT Gateway
+# Purpose: Enables resources within private subnets outbound internet access for 
+# updates, patches, etc.
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
   subnet_id     = aws_subnet.public[0].id
@@ -95,7 +103,8 @@ resource "aws_nat_gateway" "nat" {
   })
 }
 
-# Single private route table used by all private subnets
+# Route Table for Private Subnets
+# Purpose: Routes internet-bound traffic from private subnets to the NAT Gateway.
 resource "aws_route_table" "private_rt" {
   vpc_id = aws_vpc.main.id
 
@@ -104,7 +113,8 @@ resource "aws_route_table" "private_rt" {
   })
 }
 
-# Default route for private subnets -> NAT Gateway (IPv4 egress)
+# Route within Private Route Table to NAT Gateway
+# Purpose: Ensures private subnet resources have outbound internet access via the NAT Gateway.
 resource "aws_route" "private_default_to_nat" {
   route_table_id         = aws_route_table.private_rt.id
   destination_cidr_block = "0.0.0.0/0"
@@ -113,12 +123,10 @@ resource "aws_route" "private_default_to_nat" {
   depends_on = [aws_nat_gateway.nat]
 }
 
-# Associate private subnets with the private route table
+# Route Table Association for Private Subnets
+# Purpose: Associates private subnets with the private route table.
 resource "aws_route_table_association" "private_rta" {
   count          = length(aws_subnet.private)
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private_rt.id
 }
-
-
-
