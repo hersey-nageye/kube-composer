@@ -1,3 +1,7 @@
+# Cluster Issuer
+# Purpose: To define a ClusterIssuer resource to manage the request, storage
+# and renewal of TLS/HTTPS certificates within a Kubernetes cluster.
+
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -5,7 +9,7 @@ metadata:
 spec:
   acme:
     server: "https://acme-v02.api.letsencrypt.org/directory"
-    email: "hersey_nageye1@hotmai.com"
+    email: "hersey_nageye1@hotmail.com"
     privateKeySecretRef:
       name: issuer
     solvers:
