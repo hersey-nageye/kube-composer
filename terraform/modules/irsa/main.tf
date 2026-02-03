@@ -1,9 +1,5 @@
-########################################
-# IAM ROLE (TRUST POLICY)
-# - Trusts the cluster's OIDC provider
-# - Restricted to the given ServiceAccount
-########################################
-
+# Creating IAM role to allow Kubernetes service account to assume this specific role
+# this is achieved by connecting the IAM role with the OIDC provider of the EKS cluster
 resource "aws_iam_role" "this" {
   name = "irsa-${var.namespace}-${var.service_account}"
 
@@ -31,22 +27,14 @@ resource "aws_iam_role" "this" {
   })
 }
 
-########################################
-# IAM POLICY (INLINE)
-# - Define the permissions this SA should get
-# - Example: Route53 change records for cert-manager
-########################################
-
+# Creating a trust policy to regulate which service account can assume this IAM role
 resource "aws_iam_policy" "this" {
   name   = "irsa-${var.namespace}-${var.service_account}"
   policy = var.policy_json
   tags   = var.tags
 }
 
-########################################
-# ATTACH POLICY TO ROLE
-########################################
-
+# Attaching the created trust policy to the IAM role
 resource "aws_iam_role_policy_attachment" "this" {
   role       = aws_iam_role.this.name
   policy_arn = aws_iam_policy.this.arn
